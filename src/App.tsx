@@ -16,12 +16,15 @@ type ModalState =
   | { mode: 'configure'; project: Project }
   | null;
 
-type Route = { name: 'dashboard' } | { name: 'remote'; session: string | null };
+type Route = { name: 'dashboard' } | { name: 'remote'; session: string | null } | { name: 'node'; session: string | null };
 
 function readRoute(): Route {
   const path = window.location.pathname.replace(/\/+$/, '');
   if (path.endsWith('/remote')) {
     return { name: 'remote', session: new URLSearchParams(window.location.search).get('session') };
+  }
+  if (path.endsWith('/node')) {
+    return { name: 'node', session: new URLSearchParams(window.location.search).get('session') };
   }
   return { name: 'dashboard' };
 }
@@ -88,5 +91,7 @@ function Dashboard() {
 
 export default function App() {
   const [route] = useState(readRoute);
-  return route.name === 'remote' ? <RemoteView session={route.session} /> : <Dashboard />;
+  if (route.name === 'remote') return <RemoteView session={route.session} />;
+  if (route.name === 'node') return <RobotNodeView session={route.session} />;
+  return <Dashboard />;
 }
