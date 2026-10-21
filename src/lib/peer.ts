@@ -38,7 +38,7 @@ export function createSessionId(): string {
 }
 
 export const pairUrl = (sessionId: string): string =>
-  `${window.location.origin}/node?session=${encodeURIComponent(sessionId)}`;
+  `${window.location.origin}/remote?session=${encodeURIComponent(sessionId)}`;
 
 export async function readVideoStats(pc: RTCPeerConnection, direction: 'inbound' | 'outbound'): Promise<LinkStats> {
   const stats: LinkStats = { ...NO_STATS };
