@@ -21,6 +21,12 @@ function describeError(error: unknown): string {
 }
 
 interface CameraFeedProps {
+  stream?: MediaStream | null;
+  status?: string;
+  message?: string;
+  waitingText?: string;
+  onRetry?: () => void;
+  fill?: boolean;
   children?: ReactNode;
 }
 
