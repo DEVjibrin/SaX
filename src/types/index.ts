@@ -1,5 +1,5 @@
 import { Car, Cog, Fan, type LucideIcon } from 'lucide-react';
-import type { ProjectIntegration } from './types/controller';
+import type { ProjectIntegration } from './controller';
 
 export type MachineType = 'rover' | 'drone' | 'mechanism';
 
