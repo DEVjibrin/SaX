@@ -92,6 +92,6 @@ function Dashboard() {
 export default function App() {
   const [route] = useState(readRoute);
   if (route.name === 'remote') return <RemoteView session={route.session} />;
-  if (route.name === 'node') return <RobotNodeView session={route.session} />;
+  if (route.name === 'node') return <RobotNodeView project={{ id: route.session || 'node', name: 'Camera Node'} as any} onBack={() => {}}/>;
   return <Dashboard />;
 }
