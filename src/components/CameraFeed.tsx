@@ -26,6 +26,7 @@ interface CameraFeedProps {
   message?: string;
   waitingText?: string;
   onRetry?: () => void;
+  onSwitch?: () => void;
   fill?: boolean;
   children?: ReactNode;
 }
