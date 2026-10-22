@@ -51,6 +51,7 @@ export function useRobotLink({ stream, hello, serial, battery }: RobotLinkOption
       setError("Can't reach the pairing service. Check your internet connection.");
       setStatus('error');
     });
+
     peer.on('connection', (conn) => {
       if (connRef.current) {
         conn.on('open', () => conn.close());
@@ -71,6 +72,7 @@ export function useRobotLink({ stream, hello, serial, battery }: RobotLinkOption
         conn.send({ type: 'hello', ...helloRef.current });
         setStatus('paired');
       });
+
       conn.on('data', (data) => {
         const parsed = parseControl(data);
         const previous = commandRef.current;
@@ -80,6 +82,7 @@ export function useRobotLink({ stream, hello, serial, battery }: RobotLinkOption
           : { ...parsed.telemetry, sensors: NEUTRAL_TELEMETRY.sensors };
         commandRef.current = { telemetry, seq: parsed.seq, at: performance.now() };
       });
+
       conn.on('close', drop);
       conn.on('error', drop);
     });
@@ -93,22 +96,47 @@ export function useRobotLink({ stream, hello, serial, battery }: RobotLinkOption
     };
   }, [sessionId]);
 
+  // Robustly initiate / manage the video call whenever stream or connection status updates
   useEffect(() => {
     const peer = peerRef.current;
     const conn = connRef.current;
+
     if (status !== 'paired' || !stream || !peer || !conn) return;
-    const call = callRef.current;
-    if (!call) {
-      const next = peer.call(conn.peer, stream);
-      callRef.current = next;
-      next.on('close', () => {
-        if (callRef.current === next) callRef.current = null;
-      });
-      return;
-    }
-    const track = stream.getVideoTracks()[0];
-    const sender = call.peerConnection.getSenders().find((candidate) => candidate.track?.kind === 'video');
-    if (track && sender && sender.track !== track) void sender.replaceTrack(track);
+
+    const callPeer = () => {
+      // If we already have a call, replace the video track
+      if (callRef.current) {
+        const track = stream.getVideoTracks()[0];
+        const sender = callRef.current.peerConnection
+          ?.getSenders()
+          ?.find((candidate) => candidate.track?.kind === 'video');
+        if (track && sender && sender.track !== track) {
+          void sender.replaceTrack(track);
+        }
+        return;
+      }
+
+      // Small delay to ensure the remote peer has set up its peer.on('call') listener
+      const timer = setTimeout(() => {
+        if (!conn.peer || callRef.current) return;
+        const next = peer.call(conn.peer, stream);
+        callRef.current = next;
+
+        next.on('close', () => {
+          if (callRef.current === next) callRef.current = null;
+        });
+        next.on('error', () => {
+          if (callRef.current === next) callRef.current = null;
+        });
+      }, 300);
+
+      return () => clearTimeout(timer);
+    };
+
+    const cleanup = callPeer();
+    return () => {
+      if (cleanup) cleanup();
+    };
   }, [status, stream]);
 
   useEffect(() => {

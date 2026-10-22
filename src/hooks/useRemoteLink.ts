@@ -39,21 +39,32 @@ export function useRemoteLink(session: string | null) {
       const conn = peer.connect(session, { serialization: 'json', reliable: false });
       connRef.current = conn;
       const closed = () => setStatus((current) => (current === 'error' ? current : 'closed'));
+
       conn.on('open', () => setStatus('connected'));
       conn.on('data', (data) => {
         const message = data as RobotMessage | null;
-        if (message?.type === 'hello') setHello({ name: message.name, badge: message.badge, tilt: message.tilt });
-        else if (message?.type === 'state') setRobot({ serial: message.serial, battery: message.battery });
+        if (message?.type === 'hello') {
+          setHello({ name: message.name, badge: message.badge, tilt: message.tilt });
+        } else if (message?.type === 'state') {
+          setRobot({ serial: message.serial, battery: message.battery });
+        }
       });
       conn.on('close', closed);
       conn.on('error', closed);
     });
+
+    // Handle incoming video call from the Node
     peer.on('call', (call) => {
       callRef.current = call;
+      // Answer WITHOUT passing a local stream, because the Remote only receives video
       call.answer();
-      call.on('stream', (remote) => setStream(remote));
+      call.on('stream', (remoteStream) => {
+        setStream(remoteStream);
+      });
       call.on('close', () => setStream(null));
+      call.on('error', () => setStream(null));
     });
+
     peer.on('error', (failure) => {
       const type = (failure as { type?: string }).type;
       setError(
