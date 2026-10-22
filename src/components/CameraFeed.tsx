@@ -3,7 +3,7 @@ import { RefreshCw, SwitchCamera, VideoOff } from 'lucide-react';
 import type { CameraFacing } from '../types/controller';
 import type { FeedStatus } from '../types/link';
 
-const STATUS: Record<FeedStatus, { label: string; dot: string }> = {
+const STATUS: Record<string, { label: string; dot: string }> = {
   starting: { label: 'Starting', dot: 'animate-pulse bg-amber-400' },
   live: { label: 'Live', dot: 'bg-emerald-400' },
   error: { label: 'Error', dot: 'bg-red-400' },
